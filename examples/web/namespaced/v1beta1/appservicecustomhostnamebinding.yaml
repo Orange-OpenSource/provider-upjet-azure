@@ -26,12 +26,15 @@ kind: LinuxWebApp
 metadata:
   annotations:
     meta.upbound.io/example-id: web/v1beta1/appservicecustomhostnamebinding
+    uptest.upbound.io/timeout: "2700"
   labels:
     testing.upbound.io/example-name: appsvccusthostbindv1beta1ns
   name: appsvccusthostbindv1beta1ns
   namespace: upbound-system
 spec:
   forProvider:
+    authSettings:
+      enabled: false
     location: West Europe
     resourceGroupNameSelector:
       matchLabels:
