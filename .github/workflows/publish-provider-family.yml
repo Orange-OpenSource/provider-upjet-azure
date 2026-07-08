@@ -166,7 +166,7 @@ jobs:
           if [ $num_packages -gt 10 ]; then
             num_packages=10
           fi
-          make -j $num_packages SUBPACKAGES="${{ steps.packages.outputs.target }}" XPKG_REG_ORGS="${{ env.CROSSPLANE_REGORG }}" XPKG_REG_ORGS_NO_PROMOTE="${{ env.CROSSPLANE_REGORG }}" CONFIG_DEPENDENCY_REG_ORG="${{ env.CROSSPLANE_PROXY_REGORG }}" BRANCH_NAME="main" ${{ inputs.version != '' && format('VERSION={0}', inputs.version) || '' }} build.all
+          make -j $num_packages SUBPACKAGES="${{ steps.packages.outputs.target }}" XPKG_REG_ORGS="${{ env.CROSSPLANE_REGORG }}" XPKG_REG_ORGS_NO_PROMOTE="${{ env.CROSSPLANE_REGORG }}" CONFIG_DEPENDENCY_REG_ORG="${{ env.CROSSPLANE_PROXY_REGORG }}" BRANCH_NAME="main" ${{ inputs.version != '' && format('VERSION={0}', inputs.version) || '' }} IMAGES=provider-bleu-azure build.all
           echo "num_packages=$num_packages" >> $GITHUB_OUTPUT
         env:
           # We're using docker buildx, which doesn't actually load the images it
