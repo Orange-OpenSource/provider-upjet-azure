@@ -7,7 +7,8 @@
 # Setup Project
 
 PROVIDER_NAME := azure
-PROJECT_NAME := provider-bleu-azure
+PACKAGE_PROVIDER_NAME := bleu-azure
+PROJECT_NAME := provider-$(PACKAGE_PROVIDER_NAME)
 PROJECT_REPO := github.com/upbound/provider-azure/v2
 
 export TERRAFORM_VERSION ?= 1.5.5
@@ -16,6 +17,7 @@ export TERRAFORM_PROVIDER_SOURCE ?= hashicorp/azurerm
 export TERRAFORM_PROVIDER_REPO ?= https://github.com/hashicorp/terraform-provider-azurerm
 export TERRAFORM_DOCS_PATH ?= website/docs/r
 export PROVIDER_NAME
+export PACKAGE_PROVIDER_NAME
 
 PLATFORMS ?= linux_amd64 linux_arm64
 

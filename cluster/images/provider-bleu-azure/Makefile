@@ -61,13 +61,17 @@ batch-process: $(CROSSPLANE_CLI)
 	@rm -rf $(WORK_DIR)/xpkg-cleaned-examples
 	@GOOS=$(HOSTOS) GOARCH=$(TARGETARCH) go run github.com/upbound/uptest/cmd/cleanupexamples@$(XPKG_CLEANUP_EXAMPLES_VERSION) $(ROOT_DIR)/examples $(WORK_DIR)/xpkg-cleaned-examples || $(FAIL)
 	@$(INFO) Batch processing smaller provider packages for: "$(SUBPACKAGES)"
+	@for platform in $$(echo "$(BATCH_PLATFORMS)" | tr ',' ' '); do \
+		arch=$${platform##*_}; \
+		docker tag $(BUILD_REGISTRY)/$(PROJECT_NAME)-$$arch $(BUILD_REGISTRY)/provider-$(PROVIDER_NAME)-$$arch || $(FAIL); \
+	done
 	@mkdir -p "$(XPKG_OUTPUT_DIR)/$(PLATFORM)" && \
 	$(CROSSPLANE_CLI) xpkg batch --smaller-providers "$$(tr ' ' ',' <<< "$(SUBPACKAGES)")" \
 		--family-base-image $(BUILD_REGISTRY)/$(PROJECT_NAME) \
 		--platform $(BATCH_PLATFORMS) \
 		--provider-name $(PROJECT_NAME) \
 		--family-package-url-format $(XPKG_REG_ORGS)/%s:$(VERSION) \
-		--package-repo-override monolith=$(PROJECT_NAME) --package-repo-override config=provider-family-$(PROVIDER_NAME) \
+		--package-repo-override monolith=$(PROJECT_NAME) --package-repo-override config=provider-family-$(PACKAGE_PROVIDER_NAME) \
 		--provider-bin-root $(OUTPUT_DIR)/bin \
 		--output-dir $(XPKG_OUTPUT_DIR) \
 		--store-packages "$(STORE_PACKAGES)" \
@@ -78,7 +82,7 @@ batch-process: $(CROSSPLANE_CLI)
 		--ignore $(XPKG_IGNORE) \
 		--crd-group-override monolith=* --crd-group-override config=$(CONFIG_CRD_GROUP) \
 		--package-metadata-template $(XPKG_DIR)/crossplane.yaml.tmpl \
-		--template-var XpkgRegOrg=$(CONFIG_DEPENDENCY_REG_ORG) --template-var DepConstraint="$(DEP_CONSTRAINT)" --template-var ProviderName=$(PROVIDER_NAME) --template-var ProviderAuthGroup=$(PROVIDER_AUTH_GROUP) \
+		--template-var XpkgRegOrg=$(CONFIG_DEPENDENCY_REG_ORG) --template-var DepConstraint="$(DEP_CONSTRAINT)" --template-var ProviderName=$(PROVIDER_NAME) --template-var PackageProviderName=$(PACKAGE_PROVIDER_NAME) --template-var ProviderAuthGroup=$(PROVIDER_AUTH_GROUP) \
 		--concurrency $(CONCURRENCY) \
 		--push-retry 10 || $(FAIL)
 	@$(OK) Done processing smaller provider packages for: "$(SUBPACKAGES)"

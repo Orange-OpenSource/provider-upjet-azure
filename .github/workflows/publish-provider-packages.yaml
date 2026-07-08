@@ -23,6 +23,18 @@ on:
         description: 'Go version to use if building needs to be done'
         default: '1.25.11'
         required: false
+      platforms:
+        description: "Space-separated make platforms (for example: linux_amd64 linux_arm64)"
+        default: 'linux_amd64 linux_arm64'
+        required: false
+      batch-platforms:
+        description: "Comma-separated xpkg batch platforms (for example: linux_amd64,linux_arm64)"
+        default: 'linux_amd64,linux_arm64'
+        required: false
+
+permissions:
+  contents: read
+  packages: write
 
 jobs:
   publish-provider-packages:
@@ -34,8 +46,8 @@ jobs:
       repository: provider-azure
       version: ${{ github.event.inputs.version }}
       go-version: ${{ github.event.inputs.go-version }}
+      platforms: ${{ github.event.inputs.platforms }}
+      batch-platforms: ${{ github.event.inputs.batch-platforms }}
       cleanup-disk: true
       runs-on: ubuntu-latest
       mirror-to-upbound-registry: false
-    secrets:
-      GHCR_PAT: ${{ secrets.GHCR_PAT }}
