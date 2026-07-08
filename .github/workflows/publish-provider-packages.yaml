@@ -31,6 +31,14 @@ on:
         description: "Comma-separated xpkg batch platforms (for example: linux_amd64,linux_arm64)"
         default: 'linux_amd64,linux_arm64'
         required: false
+      verify-dependencies:
+        description: "Run make vendor vendor.check before building"
+        default: 'true'
+        required: false
+      include-generator:
+        description: "Build cmd/generator together with provider binaries"
+        default: 'true'
+        required: false
 
 permissions:
   contents: read
@@ -48,6 +56,8 @@ jobs:
       go-version: ${{ github.event.inputs.go-version }}
       platforms: ${{ github.event.inputs.platforms }}
       batch-platforms: ${{ github.event.inputs.batch-platforms }}
+      verify-dependencies: ${{ github.event.inputs.verify-dependencies == 'true' }}
+      include-generator: ${{ github.event.inputs.include-generator == 'true' }}
       cleanup-disk: true
       runs-on: ubuntu-latest
       mirror-to-upbound-registry: false
