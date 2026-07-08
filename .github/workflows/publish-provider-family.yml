@@ -175,7 +175,7 @@ jobs:
 
       - name: Publish Artifacts
         run: |
-          make -j ${{ steps.build_artifacts.outputs.num_packages }} SUBPACKAGES="${{ steps.packages.outputs.target }}" XPKG_REG_ORGS="${{ env.CROSSPLANE_REGORG }}" XPKG_REG_ORGS_NO_PROMOTE="${{ env.CROSSPLANE_REGORG }}" CONFIG_DEPENDENCY_REG_ORG="${{ env.CROSSPLANE_PROXY_REGORG }}" CONCURRENCY="${{ inputs.concurrency }}" BRANCH_NAME="main" ${{ inputs.version != '' && format('VERSION={0}', inputs.version) || '' }} publish
+          make -j ${{ steps.build_artifacts.outputs.num_packages }} SUBPACKAGES="${{ steps.packages.outputs.target }}" XPKG_REG_ORGS="${{ env.CROSSPLANE_REGORG }}" XPKG_REG_ORGS_NO_PROMOTE="${{ env.CROSSPLANE_REGORG }}" CONFIG_DEPENDENCY_REG_ORG="${{ env.CROSSPLANE_PROXY_REGORG }}" CONCURRENCY="${{ inputs.concurrency }}" BRANCH_NAME="main" ${{ inputs.version != '' && format('VERSION={0}', inputs.version) || '' }} IMAGES=provider-bleu-azure publish
 
       # - name: Mirror to xpkg.upbound.io
       #   if: ${{ inputs.mirror-to-upbound-registry }}

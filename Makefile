@@ -7,7 +7,7 @@
 # Setup Project
 
 PROVIDER_NAME := azure
-PROJECT_NAME := provider-bleu-$(PROVIDER_NAME)
+PROJECT_NAME := provider-$(PROVIDER_NAME)
 PROJECT_REPO := github.com/upbound/$(PROJECT_NAME)/v2
 
 export TERRAFORM_VERSION ?= 1.5.5
