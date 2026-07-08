@@ -94,7 +94,7 @@ export CROSSPLANE_CLI_VERSION := $(CROSSPLANE_CLI_VERSION)
 # Setup Images
 
 REGISTRY_ORGS ?= ghcr.io/Orange-OpenSource
-IMAGES = provider-azure
+IMAGES = provider-bleu-azure
 BATCH_PLATFORMS ?= linux_amd64,linux_arm64
 export BATCH_PLATFORMS := $(BATCH_PLATFORMS)
 
