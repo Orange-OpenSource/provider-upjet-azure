@@ -93,7 +93,7 @@ export CROSSPLANE_CLI_VERSION := $(CROSSPLANE_CLI_VERSION)
 # ====================================================================================
 # Setup Images
 
-REGISTRY_ORGS ?= xpkg.upbound.io/upbound
+REGISTRY_ORGS ?= ghcr.io/Orange-OpenSource
 IMAGES = provider-azure
 BATCH_PLATFORMS ?= linux_amd64,linux_arm64
 export BATCH_PLATFORMS := $(BATCH_PLATFORMS)
@@ -103,7 +103,7 @@ export BATCH_PLATFORMS := $(BATCH_PLATFORMS)
 # ====================================================================================
 # Setup XPKG
 
-XPKG_REG_ORGS ?= xpkg.upbound.io/upbound
+XPKG_REG_ORGS ?= ghcr.io/Orange-OpenSource
 # NOTE(hasheddan): skip promoting on xpkg.upbound.io as channel tags are
 # inferred.
 XPKG_REG_ORGS_NO_PROMOTE ?= xpkg.upbound.io/upbound

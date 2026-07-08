@@ -26,7 +26,7 @@ on:
 
 jobs:
   publish-provider-packages:
-    uses: crossplane-contrib/provider-workflows/.github/workflows/publish-provider-family.yml@451c4dc6ad3691b0a702a997a0ac24e8bbc8bbaa # main
+    uses: ./.github/workflows/publish-provider-family.yml
     with:
       subpackages: ${{ github.event.inputs.subpackages }}
       size: ${{ github.event.inputs.size }}
@@ -36,6 +36,6 @@ jobs:
       go-version: ${{ github.event.inputs.go-version }}
       cleanup-disk: true
       runs-on: oracle-vm-16cpu-64gb-x86-64
+      mirror-to-upbound-registry: false
     secrets:
-      GHCR_PAT: ${{ secrets.GITHUB_TOKEN }}
-      XPKG_UPBOUND_TOKEN: ${{ secrets.XPKG_UPBOUND_TOKEN }}
+      GHCR_PAT: ${{ secrets.GHCR_PAT }}
