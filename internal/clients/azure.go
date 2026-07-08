@@ -124,6 +124,10 @@ func TerraformSetupBuilder(tfProvider *schema.Provider) terraform.SetupFn { //no
 			return terraform.Setup{}, errors.Wrap(err, "failed to prepare terraform.Setup")
 		}
 
+		if mh := os.Getenv("ARM_METADATA_HOSTNAME"); mh != "" {
+			ps.Configuration["metadata_host"] = mh
+		}
+
 		return ps, errors.Wrap(configureNoForkAzureClient(ctx, &ps, *tfProvider), "failed to configure the no-fork Azure client")
 	}
 }
