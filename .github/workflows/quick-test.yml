@@ -1,0 +1,48 @@
+name: Quick Test Image Build
+
+on:
+  workflow_dispatch:
+
+env:
+  DOCKER_BUILDX_VERSION: 'v0.20.1'
+  CROSSPLANE_REGORG: 'ghcr.io/Orange-OpenSource'
+  CROSSPLANE_PROXY_REGORG: 'ghcr.io/Orange-OpenSource'
+
+jobs:
+  test-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v2
+        with:
+          version: ${{ env.DOCKER_BUILDX_VERSION }}
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Fetch History
+        run: git fetch --prune --unshallow
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25.11'
+
+      - name: Build Go (config only)
+        run: make SUBPACKAGES=config go.build
+
+      - name: Build Image (config only)
+        run: make SUBPACKAGES=config XPKG_REG_ORGS="${{ env.CROSSPLANE_REGORG }}" CONFIG_DEPENDENCY_REG_ORG="${{ env.CROSSPLANE_PROXY_REGORG }}" IMAGES=provider-bleu-azure img.build
+        env:
+          BUILD_ARGS: "--load"
+
+      - name: Verify Image Name
+        run: |
+          echo "=== Checking image exists ==="
+          docker images | grep provider-bleu-azure || echo "ERROR: provider-bleu-azure image not found"
+          docker images | grep provider-azure && echo "WARNING: old provider-azure image still present"
