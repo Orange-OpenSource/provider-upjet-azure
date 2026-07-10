@@ -7,8 +7,10 @@
 # Setup Project
 
 PROVIDER_NAME := azure
-PROJECT_NAME := provider-bleu-azure
+PACKAGE_PROVIDER_NAME := bleu-azure
+PROJECT_NAME := provider-$(PACKAGE_PROVIDER_NAME)
 PROJECT_REPO := github.com/upbound/provider-azure/v2
+INCLUDE_GENERATOR ?= true
 
 export TERRAFORM_VERSION ?= 1.5.5
 export TERRAFORM_PROVIDER_VERSION ?= 4.54.0
@@ -16,6 +18,7 @@ export TERRAFORM_PROVIDER_SOURCE ?= hashicorp/azurerm
 export TERRAFORM_PROVIDER_REPO ?= https://github.com/hashicorp/terraform-provider-azurerm
 export TERRAFORM_DOCS_PATH ?= website/docs/r
 export PROVIDER_NAME
+export PACKAGE_PROVIDER_NAME
 
 PLATFORMS ?= linux_amd64 linux_arm64
 
@@ -66,12 +69,16 @@ SUBPACKAGES ?= monolith
 ifeq ($(strip $(SUBPACKAGES)),*)
 override SUBPACKAGES := $(filter-out monolith azure,$(shell find cmd/provider -type d -maxdepth 1 -mindepth 1 | cut -d/ -f3))
 endif
-GO_STATIC_PACKAGES ?= $(GO_PROJECT)/cmd/generator ${SUBPACKAGES:%=$(GO_PROJECT)/cmd/provider/%}
+GO_STATIC_PACKAGES ?= ${SUBPACKAGES:%=$(GO_PROJECT)/cmd/provider/%}
+ifeq ($(INCLUDE_GENERATOR),true)
+GO_STATIC_PACKAGES += $(GO_PROJECT)/cmd/generator
+endif
 GO_LDFLAGS += -X $(GO_PROJECT)/internal/version.Version=$(VERSION)
 GO_SUBDIRS += cmd internal apis generate config
 GO111MODULE = on
 
 export SUBPACKAGES := $(SUBPACKAGES)
+export INCLUDE_GENERATOR := $(INCLUDE_GENERATOR)
 
 -include build/makelib/golang.mk
 
@@ -93,7 +100,7 @@ export CROSSPLANE_CLI_VERSION := $(CROSSPLANE_CLI_VERSION)
 # ====================================================================================
 # Setup Images
 
-REGISTRY_ORGS ?= ghcr.io/Orange-OpenSource
+REGISTRY_ORGS ?= ghcr.io/orange-opensource
 IMAGES = provider-bleu-azure
 BATCH_PLATFORMS ?= linux_amd64,linux_arm64
 export BATCH_PLATFORMS := $(BATCH_PLATFORMS)
@@ -103,7 +110,7 @@ export BATCH_PLATFORMS := $(BATCH_PLATFORMS)
 # ====================================================================================
 # Setup XPKG
 
-XPKG_REG_ORGS ?= ghcr.io/Orange-OpenSource
+XPKG_REG_ORGS ?= ghcr.io/orange-opensource
 # NOTE(hasheddan): skip promoting on xpkg.upbound.io as channel tags are
 # inferred.
 XPKG_REG_ORGS_NO_PROMOTE ?= xpkg.upbound.io/upbound

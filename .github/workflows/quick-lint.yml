@@ -1,0 +1,101 @@
+name: Quick Lint
+
+on:
+  push:
+    branches:
+      - codex/publish-smoke-fix
+  workflow_dispatch:
+    inputs:
+      targets:
+        description: 'Target package pattern(s) passed to golangci-lint (for example: ./config/test/roundtrip/...)'
+        default: './config/test/roundtrip/...'
+        required: false
+        type: string
+      linters:
+        description: 'Optional comma-separated linter selection (for example: staticcheck)'
+        default: 'staticcheck'
+        required: false
+        type: string
+      timeout:
+        description: 'golangci-lint timeout'
+        default: '15m'
+        required: false
+        type: string
+      build-tags:
+        description: 'Build tags passed to golangci-lint'
+        default: 'all'
+        required: false
+        type: string
+      verify-dependencies:
+        description: 'Run make vendor vendor.check before linting'
+        default: false
+        required: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quick-lint-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quick-lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          submodules: true
+
+      - name: Setup Go
+        uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
+        with:
+          go-version-file: go.mod
+
+      - name: Cache Go Modules
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5
+        with:
+          path: |
+            /home/runner/go/pkg/mod
+            /home/runner/.cache/go-build
+          key: ${{ runner.os }}-quick-lint-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-quick-lint-go-
+
+      - name: Cache golangci-lint
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5
+        with:
+          path: |
+            /home/runner/.cache/golangci-lint
+            .cache/bin
+          key: ${{ runner.os }}-quick-lint-golangci-${{ hashFiles('.golangci.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-quick-lint-golangci-
+
+      - name: Vendor Dependencies
+        if: ${{ inputs.verify-dependencies }}
+        run: make vendor vendor.check
+
+      - name: Install golangci-lint
+        run: |
+          mkdir -p .cache/bin
+          GOBIN="$PWD/.cache/bin" go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.6.2
+
+      - name: Run Quick Lint
+        env:
+          GOLANGCI_LINT_CACHE: /home/runner/.cache/golangci-lint
+          LINT_TARGETS: ${{ inputs.targets != '' && inputs.targets || (github.event_name == 'push' && './...' || './config/test/roundtrip/...') }}
+          LINT_LINTERS: ${{ inputs.linters != '' && inputs.linters || 'staticcheck' }}
+          LINT_TIMEOUT: ${{ inputs.timeout != '' && inputs.timeout || '15m' }}
+          LINT_BUILD_TAGS: ${{ inputs.build-tags != '' && inputs.build-tags || 'all' }}
+        run: |
+          args=(run "--timeout=${LINT_TIMEOUT}" "--build-tags" "${LINT_BUILD_TAGS}")
+          if [[ -n "${LINT_LINTERS}" ]]; then
+            args+=("--enable-only" "${LINT_LINTERS}")
+          fi
+          echo "Running: .cache/bin/golangci-lint ${args[*]} ${LINT_TARGETS}"
+          # shellcheck disable=SC2086
+          .cache/bin/golangci-lint "${args[@]}" ${LINT_TARGETS}

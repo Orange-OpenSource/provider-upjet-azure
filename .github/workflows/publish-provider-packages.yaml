@@ -16,13 +16,33 @@ on:
         default: '1'
         required: false
       version:
-        description: "Version string to use while publishing the packages (e.g. v1.0.0-alpha.1)"
+        description: "Version string to use while publishing the packages (e.g. v2.6.0-bleu.1)"
         default: ''
         required: false
       go-version:
         description: 'Go version to use if building needs to be done'
         default: '1.25.11'
         required: false
+      platforms:
+        description: "Space-separated make platforms (for example: linux_amd64 linux_arm64)"
+        default: 'linux_amd64 linux_arm64'
+        required: false
+      batch-platforms:
+        description: "Comma-separated xpkg batch platforms (for example: linux_amd64,linux_arm64)"
+        default: 'linux_amd64,linux_arm64'
+        required: false
+      verify-dependencies:
+        description: "Run make vendor vendor.check before building"
+        default: 'true'
+        required: false
+      include-generator:
+        description: "Build cmd/generator together with provider binaries"
+        default: 'true'
+        required: false
+
+permissions:
+  contents: read
+  packages: write
 
 jobs:
   publish-provider-packages:
@@ -34,8 +54,10 @@ jobs:
       repository: provider-azure
       version: ${{ github.event.inputs.version }}
       go-version: ${{ github.event.inputs.go-version }}
+      platforms: ${{ github.event.inputs.platforms }}
+      batch-platforms: ${{ github.event.inputs.batch-platforms }}
+      verify-dependencies: ${{ github.event.inputs.verify-dependencies == 'true' }}
+      include-generator: ${{ github.event.inputs.include-generator == 'true' }}
       cleanup-disk: true
       runs-on: ubuntu-latest
       mirror-to-upbound-registry: false
-    secrets:
-      GHCR_PAT: ${{ secrets.GHCR_PAT }}

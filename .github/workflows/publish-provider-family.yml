@@ -29,7 +29,7 @@ on:
         type: string
       go-version:
         description: 'Go version to use if building needs to be done'
-        default: '1.22'
+        default: '1.25.11'
         required: false
         type: string
       cleanup-disk:
@@ -41,24 +41,43 @@ on:
         default: ubuntu-latest
         required: false
         type: string
+      platforms:
+        description: "Space-separated target platforms passed to make (for example: linux_amd64 linux_arm64)"
+        default: 'linux_amd64 linux_arm64'
+        required: false
+        type: string
+      batch-platforms:
+        description: "Comma-separated xpkg batch platforms (for example: linux_amd64,linux_arm64)"
+        default: 'linux_amd64,linux_arm64'
+        required: false
+        type: string
+      verify-dependencies:
+        description: "If set to true, run make vendor vendor.check before building"
+        default: true
+        required: false
+        type: boolean
+      include-generator:
+        description: "If set to true, build cmd/generator alongside provider binaries"
+        default: true
+        required: false
+        type: boolean
       mirror-to-upbound-registry:
         description: "If set to true, the xpkgs will be mirrored to xpkg.upbound.io"
         required: false
         type: boolean
         default: true
     secrets:
-      GHCR_PAT:
-        required: true
       XPKG_UPBOUND_TOKEN:
         required: false # still needed if inputs.mirror-to-upbound-registry is true
 
-env:
-  # Common versions
-  DOCKER_BUILDX_VERSION: 'v0.20.1'
+permissions:
+  contents: read
+  packages: write
 
+env:
   # Registry/Org names
-  CROSSPLANE_REGORG: 'ghcr.io/Orange-OpenSource'
-  CROSSPLANE_PROXY_REGORG: 'ghcr.io/Orange-OpenSource'
+  CROSSPLANE_REGORG: 'ghcr.io/orange-opensource'
+  CROSSPLANE_PROXY_REGORG: 'ghcr.io/orange-opensource'
 
 jobs:
   index:
@@ -74,7 +93,7 @@ jobs:
           provider: ${{ github.repository }}
           ref: ${{ github.ref }}
           subpackages_str: ${{ inputs.subpackages }}
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ github.token }}
 
       - id: calc
         run: |
@@ -100,6 +119,7 @@ jobs:
           swap-storage: false
 
       - name: Setup QEMU
+        if: ${{ contains(inputs.batch-platforms, 'arm64') }}
         uses: docker/setup-qemu-action@2b82ce82d56a2a04d2637cd93a637ae1b359c0a7 # v2
         with:
           platforms: all
@@ -107,15 +127,14 @@ jobs:
       - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@885d1462b80bc1c1c7f0b00334ad271f09369c55 # v2
         with:
-          version: ${{ env.DOCKER_BUILDX_VERSION }}
           install: true
 
-      - name: Login to GHCR using PAT
+      - name: Login to GHCR using GITHUB_TOKEN
         uses: docker/login-action@v3.3.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GHCR_PAT }}
+          password: ${{ github.token }}
 
       - name: Checkout ${{ github.repository }} ${{ inputs.version }}
         uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4
@@ -123,6 +142,7 @@ jobs:
           submodules: true
 
       - name: Fetch History
+        if: ${{ inputs.version == '' }}
         run: git fetch --prune --unshallow
 
       - name: Setup Go
@@ -150,7 +170,15 @@ jobs:
           key: ${{ runner.os }}-pkg-${{ hashFiles('**/go.sum') }}
           restore-keys: ${{ runner.os }}-pkg-
 
+      - name: Cache Build Tools
+        uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf # v4
+        with:
+          path: .cache/tools
+          key: ${{ runner.os }}-tools-${{ hashFiles('Makefile', 'build/makelib/*.mk') }}
+          restore-keys: ${{ runner.os }}-tools-
+
       - name: Vendor Dependencies
+        if: ${{ inputs.verify-dependencies }}
         run: make vendor vendor.check
 
       - name: Calculate packages to build & push
@@ -166,7 +194,7 @@ jobs:
           if [ $num_packages -gt 10 ]; then
             num_packages=10
           fi
-          make -j $num_packages SUBPACKAGES="${{ steps.packages.outputs.target }}" XPKG_REG_ORGS="${{ env.CROSSPLANE_REGORG }}" XPKG_REG_ORGS_NO_PROMOTE="${{ env.CROSSPLANE_REGORG }}" CONFIG_DEPENDENCY_REG_ORG="${{ env.CROSSPLANE_PROXY_REGORG }}" BRANCH_NAME="main" ${{ inputs.version != '' && format('VERSION={0}', inputs.version) || '' }} IMAGES=provider-bleu-azure build.all
+          make -j $num_packages SUBPACKAGES="${{ steps.packages.outputs.target }}" PLATFORMS="${{ inputs.platforms }}" BATCH_PLATFORMS="${{ inputs.batch-platforms }}" XPKG_REG_ORGS="${{ env.CROSSPLANE_REGORG }}" XPKG_REG_ORGS_NO_PROMOTE="${{ env.CROSSPLANE_REGORG }}" CONFIG_DEPENDENCY_REG_ORG="${{ env.CROSSPLANE_PROXY_REGORG }}" INCLUDE_GENERATOR="${{ inputs.include-generator }}" BRANCH_NAME="main" ${{ inputs.version != '' && format('VERSION={0}', inputs.version) || '' }} IMAGES=provider-bleu-azure build.all
           echo "num_packages=$num_packages" >> $GITHUB_OUTPUT
         env:
           # We're using docker buildx, which doesn't actually load the images it
@@ -175,7 +203,7 @@ jobs:
 
       - name: Publish Artifacts
         run: |
-          make -j ${{ steps.build_artifacts.outputs.num_packages }} SUBPACKAGES="${{ steps.packages.outputs.target }}" XPKG_REG_ORGS="${{ env.CROSSPLANE_REGORG }}" XPKG_REG_ORGS_NO_PROMOTE="${{ env.CROSSPLANE_REGORG }}" CONFIG_DEPENDENCY_REG_ORG="${{ env.CROSSPLANE_PROXY_REGORG }}" CONCURRENCY="${{ inputs.concurrency }}" BRANCH_NAME="main" ${{ inputs.version != '' && format('VERSION={0}', inputs.version) || '' }} IMAGES=provider-bleu-azure publish
+          make -j ${{ steps.build_artifacts.outputs.num_packages }} SUBPACKAGES="${{ steps.packages.outputs.target }}" PLATFORMS="${{ inputs.platforms }}" BATCH_PLATFORMS="${{ inputs.batch-platforms }}" XPKG_REG_ORGS="${{ env.CROSSPLANE_REGORG }}" XPKG_REG_ORGS_NO_PROMOTE="${{ env.CROSSPLANE_REGORG }}" CONFIG_DEPENDENCY_REG_ORG="${{ env.CROSSPLANE_PROXY_REGORG }}" INCLUDE_GENERATOR="${{ inputs.include-generator }}" CONCURRENCY="${{ inputs.concurrency }}" BRANCH_NAME="main" ${{ inputs.version != '' && format('VERSION={0}', inputs.version) || '' }} IMAGES=provider-bleu-azure publish
 
       # - name: Mirror to xpkg.upbound.io
       #   if: ${{ inputs.mirror-to-upbound-registry }}
