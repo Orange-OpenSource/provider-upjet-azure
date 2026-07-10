@@ -58,7 +58,7 @@ jobs:
           make schema-version-diff
 
   lint:
-    runs-on: ${{ (github.repository_owner == 'crossplane-contrib' && 'oracle-vm-16cpu-64gb-x86-64' || 'Ubuntu-Jumbo-Runner') }}
+    runs-on: ${{ (github.repository_owner == 'crossplane-contrib' && 'oracle-vm-16cpu-64gb-x86-64' || 'ubuntu-latest') }}
     needs: detect-noop
     if: needs.detect-noop.outputs.noop != 'true'
     steps:
@@ -156,7 +156,7 @@ jobs:
           path: _output/skipped_resources.csv
 
   unit-tests:
-    runs-on: ${{ (github.repository_owner == 'crossplane-contrib' && 'oracle-vm-16cpu-64gb-x86-64' || 'Ubuntu-Jumbo-Runner') }}
+    runs-on: ${{ (github.repository_owner == 'crossplane-contrib' && 'oracle-vm-16cpu-64gb-x86-64' || 'ubuntu-latest') }}
     needs: detect-noop
     if: needs.detect-noop.outputs.noop != 'true'
     steps:
@@ -186,7 +186,7 @@ jobs:
         run: make -j2 test
 
   local-deploy:
-    runs-on: ${{ (github.repository_owner == 'crossplane-contrib' && 'oracle-vm-16cpu-64gb-x86-64' || 'Ubuntu-Jumbo-Runner') }}
+    runs-on: ${{ (github.repository_owner == 'crossplane-contrib' && 'oracle-vm-16cpu-64gb-x86-64' || 'ubuntu-latest') }}
     needs: detect-noop
     if: needs.detect-noop.outputs.noop != 'true'
     steps:
