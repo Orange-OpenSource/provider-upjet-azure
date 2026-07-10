@@ -16,7 +16,7 @@ on:
         default: '1'
         required: false
       version:
-        description: "Version string to use while publishing the packages (e.g. v1.0.0-alpha.1)"
+        description: "Version string to use while publishing the packages (e.g. v2.6.0-bleu.1)"
         default: ''
         required: false
       go-version:
