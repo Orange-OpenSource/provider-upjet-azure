@@ -1,6 +1,9 @@
 name: Quick Lint
 
 on:
+  push:
+    branches:
+      - codex/publish-smoke-fix
   workflow_dispatch:
     inputs:
       targets:
@@ -84,10 +87,10 @@ jobs:
       - name: Run Quick Lint
         env:
           GOLANGCI_LINT_CACHE: /home/runner/.cache/golangci-lint
-          LINT_TARGETS: ${{ inputs.targets }}
-          LINT_LINTERS: ${{ inputs.linters }}
-          LINT_TIMEOUT: ${{ inputs.timeout }}
-          LINT_BUILD_TAGS: ${{ inputs.build-tags }}
+          LINT_TARGETS: ${{ inputs.targets != '' && inputs.targets || './config/test/roundtrip/...' }}
+          LINT_LINTERS: ${{ inputs.linters != '' && inputs.linters || 'staticcheck' }}
+          LINT_TIMEOUT: ${{ inputs.timeout != '' && inputs.timeout || '15m' }}
+          LINT_BUILD_TAGS: ${{ inputs.build-tags != '' && inputs.build-tags || 'all' }}
         run: |
           args=(run "--timeout=${LINT_TIMEOUT}" "--build-tags" "${LINT_BUILD_TAGS}")
           if [[ -n "${LINT_LINTERS}" ]]; then
