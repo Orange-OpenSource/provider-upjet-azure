@@ -99,8 +99,10 @@ jobs:
 
       - name: Lint
         env:
-          GOLANGCI_LINT_CACHE: ${{ steps.go_cache.outputs.analysis_cache }}
-          SKIP_LINTER_ANALYSIS: false
+          GOLANGCI_LINT_CACHE: ${{ steps.analysis_cache.outputs.analysis_cache }}
+          # Forks without the larger runner spend too much time priming the
+          # staticcheck cache before the actual lint run.
+          SKIP_LINTER_ANALYSIS: ${{ github.repository_owner != 'crossplane-contrib' }}
           RUN_BUILDTAGGER: true
           GOGC: "50"
         run: make lint
