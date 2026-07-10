@@ -60,7 +60,11 @@ jobs:
   lint:
     runs-on: ${{ (github.repository_owner == 'crossplane-contrib' && 'oracle-vm-16cpu-64gb-x86-64' || 'ubuntu-latest') }}
     needs: detect-noop
-    if: needs.detect-noop.outputs.noop != 'true'
+    # The full golangci-lint suite is kept for the upstream repository where a
+    # larger runner is available. On the Orange fork we rely on the lighter
+    # Quick Lint workflow because the full job is routinely canceled on
+    # GitHub-hosted runners before completion.
+    if: github.repository_owner == 'crossplane-contrib' && needs.detect-noop.outputs.noop != 'true'
     steps:
       - name: Cleanup Disk
         uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be # v1.3.1
