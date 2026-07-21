@@ -71,7 +71,7 @@ batch-process: $(CROSSPLANE_CLI)
 		--platform $(BATCH_PLATFORMS) \
 		--provider-name $(PROJECT_NAME) \
 		--family-package-url-format $(XPKG_REG_ORGS)/%s:$(VERSION) \
-		--package-repo-override monolith=$(PROJECT_NAME) --package-repo-override config=provider-family-$(PACKAGE_PROVIDER_NAME) \
+		--package-repo-override monolith=$(PROJECT_NAME) --package-repo-override config=$(FAMILY_PROVIDER_NAME) \
 		--provider-bin-root $(OUTPUT_DIR)/bin \
 		--output-dir $(XPKG_OUTPUT_DIR) \
 		--store-packages "$(STORE_PACKAGES)" \
@@ -82,7 +82,7 @@ batch-process: $(CROSSPLANE_CLI)
 		--ignore $(XPKG_IGNORE) \
 		--crd-group-override monolith=* --crd-group-override config=$(CONFIG_CRD_GROUP) \
 		--package-metadata-template $(XPKG_DIR)/crossplane.yaml.tmpl \
-		--template-var XpkgRegOrg=$(CONFIG_DEPENDENCY_REG_ORG) --template-var DepConstraint="$(DEP_CONSTRAINT)" --template-var ProviderName=$(PROVIDER_NAME) --template-var PackageProviderName=$(PACKAGE_PROVIDER_NAME) --template-var ProviderAuthGroup=$(PROVIDER_AUTH_GROUP) \
+		--template-var XpkgRegOrg=$(CONFIG_DEPENDENCY_REG_ORG) --template-var DepConstraint="$(DEP_CONSTRAINT)" --template-var ProviderName=$(PROVIDER_NAME) --template-var PackageProviderName=$(PACKAGE_PROVIDER_NAME) --template-var FamilyPackageName=$(FAMILY_PROVIDER_NAME) --template-var ProviderAuthGroup=$(PROVIDER_AUTH_GROUP) \
 		--concurrency $(CONCURRENCY) \
 		--push-retry 10 || $(FAIL)
 	@$(OK) Done processing smaller provider packages for: "$(SUBPACKAGES)"

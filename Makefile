@@ -8,6 +8,7 @@
 
 PROVIDER_NAME := azure
 PACKAGE_PROVIDER_NAME := bleu-azure
+FAMILY_PROVIDER_NAME := provider-bleu-family-azure
 PROJECT_NAME := provider-$(PACKAGE_PROVIDER_NAME)
 PROJECT_REPO := github.com/upbound/provider-azure/v2
 INCLUDE_GENERATOR ?= true
@@ -19,6 +20,7 @@ export TERRAFORM_PROVIDER_REPO ?= https://github.com/hashicorp/terraform-provide
 export TERRAFORM_DOCS_PATH ?= website/docs/r
 export PROVIDER_NAME
 export PACKAGE_PROVIDER_NAME
+export FAMILY_PROVIDER_NAME
 
 PLATFORMS ?= linux_amd64 linux_arm64
 
